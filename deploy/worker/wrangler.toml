@@ -18,23 +18,16 @@ compatibility_flags = ["global_fetch_strictly_public"]
 
 # 静态资源（前端文件）
 [assets]
-directory = "../../frontend-dist"
+directory = "../frontend-dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
-[vars]
-# TG_BOT_TOKEN = ""
-# TG_CHAT_ID = ""
+# 綁定 R2 儲存桶
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "imgbed"
 
-# [[d1_databases]]
-# binding = "img_d1"
-# database_name = "img_d1"
-# database_id = ""
-
-# [[r2_buckets]]
-# binding = "img_r2"
-# bucket_name = ""
-
-# [[kv_namespaces]]
-# binding = "img_url"
-# id = ""
+# 綁定 KV Namespace
+[[kv_namespaces]]
+binding = "img_url"
+id = "bba0307c069d4c2295a5a7da15b3dbd4"
