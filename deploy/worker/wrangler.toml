@@ -22,23 +22,11 @@ directory = "../../frontend-dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
-# Cloudflare Images 原生图片处理
-[images]
-binding = "IMAGES"
+[[r2_buckets]]
+binding = "img_r2"
+bucket_name = "imgbed"
 
-[vars]
-# TG_BOT_TOKEN = ""
-# TG_CHAT_ID = ""
+[[kv_namespaces]]
+binding = "img_url"
+id = "bba0307c069d4c2295a5a7da15b3dbd4"
 
-# [[d1_databases]]
-# binding = "img_d1"
-# database_name = "img_d1"
-# database_id = ""
-
-# [[r2_buckets]]
-# binding = "img_r2"
-# bucket_name = ""
-
-# [[kv_namespaces]]
-# binding = "img_url"
-# id = ""
