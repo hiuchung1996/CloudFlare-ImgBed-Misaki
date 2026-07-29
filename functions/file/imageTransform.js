@@ -90,6 +90,40 @@ export function validateImageTransformRequest(request, imageTransform) {
     return null;
 }
 
+export async function transformImageRequestViaUrl(context) {
+    const { env, imageTransform, request } = context;
+    if (!imageTransform?.requested || hasConfiguredImageProcessor(env)) {
+        return null;
+    }
+
+    // Image Resizing fetches the source through this same file route. Never
+    // start another transformation for that internal source request.
+    if (/image-resizing/i.test(request.headers.get('Via') || '')) {
+        return null;
+    }
+
+    const sourceUrl = new URL(request.url);
+    sourceUrl.searchParams.delete('width');
+    sourceUrl.searchParams.delete('height');
+    sourceUrl.searchParams.delete('fit');
+
+    const transformOptions = Object.entries(imageTransform.options)
+        .map(([name, value]) => `${name}=${encodeURIComponent(value)}`)
+        .join(',');
+    const transformUrl = new URL(
+        `/cdn-cgi/image/${transformOptions}${sourceUrl.pathname}${sourceUrl.search}`,
+        sourceUrl.origin
+    );
+
+    return new Response(null, {
+        status: 302,
+        headers: {
+            'Location': transformUrl.toString(),
+            'Cache-Control': 'private, no-store, max-age=0',
+        },
+    });
+}
+
 export async function transformImageResponse(context, response) {
     const imageTransform = context.imageTransform;
     if (!imageTransform?.requested || response.status !== 200 || !response.body) {
@@ -157,6 +191,16 @@ async function runImageTransform(env, stream, options, sourceType, outputFormat)
     const error = new Error('no image processor is configured');
     error.statusCode = 501;
     throw error;
+}
+
+function hasConfiguredImageProcessor(env) {
+    const images = env?.IMAGES;
+    if (images && typeof images.input === 'function') {
+        return true;
+    }
+
+    const processor = env?.IMAGE_PROCESSOR;
+    return Boolean(processor && typeof processor.transform === 'function');
 }
 
 function parseDimension(searchParams, name) {
