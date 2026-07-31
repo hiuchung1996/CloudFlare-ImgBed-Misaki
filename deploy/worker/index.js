@@ -283,6 +283,7 @@ async function maybeServeFromCache(request, ctx, producer) {
     return response;
 }
 
+
 // ==================== Worker 入口 ====================
 
 export default {
@@ -294,20 +295,7 @@ export default {
 
         if (!matched) {
             if (env.ASSETS) {
-                const assetResponse = await env.ASSETS.fetch(request);
-                const newAssetRes = new Response(assetResponse.body, assetResponse);
-                
-                // 確保靜態資產（如放在 assets 資料夾裏的字型）也全開跨域與正確型態
-                newAssetRes.headers.set("Access-Control-Allow-Origin", "*");
-                newAssetRes.headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-                
-                if (pathname.endsWith('.woff2')) {
-                    newAssetRes.headers.set("Content-Type", "font/woff2");
-                } else if (pathname.endsWith('.woff')) {
-                    newAssetRes.headers.set("Content-Type", "font/woff");
-                }
-                
-                return newAssetRes;
+                return env.ASSETS.fetch(request);
             }
             return new Response('Not Found', { status: 404 });
         }
@@ -351,24 +339,6 @@ export default {
             data: {},
         };
 
-        /*================================Firefox 載入字體與跨域統一處理================================*/
-        const response = await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
-
-        // 建立新的 Response 以便修改 Headers（避免原本的 Response 唯讀）
-        const newResponse = new Response(response.body, response);
-
-        // 1. 確保跨域全開，解決 Firefox 的 CORS 阻擋問題
-        newResponse.headers.set("Access-Control-Allow-Origin", "*");
-        newResponse.headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-
-        // 2. 針對字型檔案強制指定正確的 MIME Type，防止 Firefox 靜默略過
-        if (pathname.endsWith('.woff2')) {
-            newResponse.headers.set("Content-Type", "font/woff2");
-        } else if (pathname.endsWith('.woff')) {
-            newResponse.headers.set("Content-Type", "font/woff");
-        }
-
-        return newResponse;
-        /*=================================================================================================*/
+        return await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
     },
 };
