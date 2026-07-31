@@ -30,5 +30,3 @@ bucket_name = "imgbed"
 binding = "img_url"
 id = "bba0307c069d4c2295a5a7da15b3dbd4"
 
-[vars]
-NODE_VERSION = "22.16.0"
