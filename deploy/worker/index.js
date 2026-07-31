@@ -283,7 +283,6 @@ async function maybeServeFromCache(request, ctx, producer) {
     return response;
 }
 
-
 // ==================== Worker 入口 ====================
 
 export default {
@@ -295,7 +294,20 @@ export default {
 
         if (!matched) {
             if (env.ASSETS) {
-                return env.ASSETS.fetch(request);
+                const assetResponse = await env.ASSETS.fetch(request);
+                const newAssetRes = new Response(assetResponse.body, assetResponse);
+                
+                // 確保靜態資產（如放在 assets 資料夾裏的字型）也全開跨域與正確型態
+                newAssetRes.headers.set("Access-Control-Allow-Origin", "*");
+                newAssetRes.headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+                
+                if (pathname.endsWith('.woff2')) {
+                    newAssetRes.headers.set("Content-Type", "font/woff2");
+                } else if (pathname.endsWith('.woff')) {
+                    newAssetRes.headers.set("Content-Type", "font/woff");
+                }
+                
+                return newAssetRes;
             }
             return new Response('Not Found', { status: 404 });
         }
@@ -338,7 +350,8 @@ export default {
             next: null,
             data: {},
         };
-/*================================Firefox 載入字體=================================================================*/
+
+        /*================================Firefox 載入字體與跨域統一處理================================*/
         const response = await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
 
         // 建立新的 Response 以便修改 Headers（避免原本的 Response 唯讀）
@@ -356,8 +369,6 @@ export default {
         }
 
         return newResponse;
-/*=================================================================================================*/
-
-        return await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
+        /*=================================================================================================*/
     },
 };
