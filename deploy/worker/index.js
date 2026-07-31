@@ -338,6 +338,25 @@ export default {
             next: null,
             data: {},
         };
+/*================================Firefox 載入字體=================================================================*/
+        const response = await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
+
+        // 建立新的 Response 以便修改 Headers（避免原本的 Response 唯讀）
+        const newResponse = new Response(response.body, response);
+
+        // 1. 確保跨域全開，解決 Firefox 的 CORS 阻擋問題
+        newResponse.headers.set("Access-Control-Allow-Origin", "*");
+        newResponse.headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+
+        // 2. 針對字型檔案強制指定正確的 MIME Type，防止 Firefox 靜默略過
+        if (pathname.endsWith('.woff2')) {
+            newResponse.headers.set("Content-Type", "font/woff2");
+        } else if (pathname.endsWith('.woff')) {
+            newResponse.headers.set("Content-Type", "font/woff");
+        }
+
+        return newResponse;
+/*=================================================================================================*/
 
         return await maybeServeFromCache(request, ctx, () => executeChain(middlewares, handler, context));
     },
