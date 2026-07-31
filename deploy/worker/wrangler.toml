@@ -29,3 +29,4 @@ bucket_name = "imgbed"
 [[kv_namespaces]]
 binding = "img_url"
 id = "bba0307c069d4c2295a5a7da15b3dbd4"
+1
